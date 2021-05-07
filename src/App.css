@@ -33,6 +33,7 @@ h1 {
 .button-OCR:hover {
   background: #3f4254;
   color: white;
+  cursor: pointer;
 }
 
 .deleteImage {
@@ -54,4 +55,8 @@ h1 {
   padding: 10px;
   margin: 10px;
   border: 2px solid red;
+}
+
+.coordinate-list-element {
+  list-style: none;
 }
