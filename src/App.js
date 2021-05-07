@@ -1,12 +1,11 @@
 import "./App.css";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Tesseract from "tesseract.js";
 import ImageUploader from "react-images-upload";
 
 const App = () => {
   const [uploadedImgs, setUploadedImgs] = useState([]);
   const [progress, setProgress] = useState(0);
-  const [processedText, setProcessedText] = useState([]);
   const [coordinates, setCoordinates] = useState({
     fullMatches: [],
     partialMatches: [],
@@ -24,8 +23,14 @@ const App = () => {
           setProgress(ww.progress * 100);
         },
       }).then(({ data: { text } }) => {
-        setProcessedText((prevProcessedTexts) => [...prevProcessedTexts, text]);
-        return processedText;
+        setCoordinates({
+          fullMatches: text.match(
+            /[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[NS]\s[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[WE]/gi
+          ),
+          partialMatches: text.match(
+            /[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[NS]\s[0-9]{2}.[0-9]{2}/gi
+          ),
+        });
       });
     });
   };
@@ -41,17 +46,8 @@ const App = () => {
     );
   };
 
-  {
-    processedText.map((ot) => (
-      <li className="ocr-element" key={processedText.indexOf(ot)}>
-        <strong>{processedText.indexOf(ot) + 1}. </strong>
-        {latLngFinder(ot)})
-      </li>
-    ));
-  }
-
   const loadingBar =
-    progress > 1 && progress < 100 && progress != 50 ? (
+    progress > 1 && progress < 100 && progress !== 50 ? (
       <div className="loading-bar-container">
         <div
           style={{
@@ -94,9 +90,8 @@ const App = () => {
                 className="coordinate"
                 key={coordinates.fullMatches.indexOf(matches)}
               >
-                <strong>
-                  {coordinates.fullMatches.indexOf(matches) + 1}.{" "}
-                </strong>
+                <strong>{coordinates.fullMatches.indexOf(matches) + 1}</strong>
+                <p>{matches}</p>
               </li>
             ))}
           </ul>
@@ -108,9 +103,9 @@ const App = () => {
                 key={coordinates.partialMatches.indexOf(matches)}
               >
                 <strong>
-                  {coordinates.partialMatches.indexOf(matches) + 1}.{" "}
+                  {coordinates.partialMatches.indexOf(matches) + 1}
                 </strong>
-                {}
+                <p>{matches}</p>
               </li>
             ))}
           </ul>
