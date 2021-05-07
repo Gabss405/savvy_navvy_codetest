@@ -41,6 +41,15 @@ const App = () => {
     );
   };
 
+  {
+    processedText.map((ot) => (
+      <li className="ocr-element" key={processedText.indexOf(ot)}>
+        <strong>{processedText.indexOf(ot) + 1}. </strong>
+        {latLngFinder(ot)})
+      </li>
+    ));
+  }
+
   const loadingBar =
     progress > 1 && progress < 100 && progress != 50 ? (
       <div className="loading-bar-container">
@@ -75,15 +84,37 @@ const App = () => {
       <div className="button-OCR" onClick={handleImageOCR}>
         Run OCR
       </div>
-      {processedText.length > 0 && (
-        <ul className="ocr-list">
-          {processedText.map((ot) => (
-            <li className="ocr-element" key={processedText.indexOf(ot)}>
-              <strong>{processedText.indexOf(ot) + 1}. </strong>
-              {latLngFinder(ot)})
-            </li>
-          ))}
-        </ul>
+      {(coordinates?.partialMatches.length > 0 ||
+        coordinates?.fullMatches.length > 0) && (
+        <div className="results-container">
+          <ul className="full-matches">
+            {" "}
+            {coordinates.fullMatches.map((matches) => (
+              <li
+                className="coordinate"
+                key={coordinates.fullMatches.indexOf(matches)}
+              >
+                <strong>
+                  {coordinates.fullMatches.indexOf(matches) + 1}.{" "}
+                </strong>
+              </li>
+            ))}
+          </ul>
+          <ul className="partial-matches">
+            {" "}
+            {coordinates.partialMatches.map((matches) => (
+              <li
+                className="coordinate"
+                key={coordinates.partialMatches.indexOf(matches)}
+              >
+                <strong>
+                  {coordinates.partialMatches.indexOf(matches) + 1}.{" "}
+                </strong>
+                {}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

@@ -42,3 +42,15 @@ h1 {
 .uploadPicture {
   width: 20vw !important;
 }
+
+.results-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+.full-matches,
+.partial-matches {
+  padding: 10px;
+  margin: 10px;
+  border: 2px solid red;
+}
