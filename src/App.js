@@ -33,7 +33,8 @@ const App = () => {
   };
 
   const fullMatchRegex = /[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[NS]\s[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[WE]/gi;
-  const partialMatchRegex = /[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[NS]\s[0-9]{2}.[0-9]{2}/gi;
+
+  const partialMatchRegex = /([0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[NS]\s[0-9]{2}.[0-9]{2})/gi;
 
   const handleImageOCR = () => {
     uploadedImgs.forEach((picture) => {
@@ -44,15 +45,14 @@ const App = () => {
         },
       })
         .then(({ data: { text } }) => {
+          console.log(text);
           let fullMatches = [];
-          let partialMatches = [];
-          text.match(fullMatchRegex).forEach((match) => {
-            fullMatches.push(sanitize(match));
+          let partialMatches = text.match(partialMatchRegex);
+
+          text.match(fullMatchRegex).forEach((el) => {
+            fullMatches.push(sanitize(el));
           });
 
-          text.match(partialMatchRegex);
-
-          console.log(fullMatches);
           return { fullMatches, partialMatches };
         })
         .then(({ fullMatches, partialMatches }) => {
@@ -62,17 +62,6 @@ const App = () => {
           });
         });
     });
-  };
-
-  const latLngFinder = (ot) => {
-    console.log(
-      ot.match(
-        /[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[NS]\s[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[WE]/gi
-      )
-    );
-    console.log(
-      ot.match(/[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[NS]\s[0-9]{2}.[0-9]{2}/gi)
-    );
   };
 
   const loadingBar =
@@ -103,7 +92,7 @@ const App = () => {
         buttonText="Choose Images"
         onChange={onDrop}
         imgExtension={[".jpg", ".gif", ".png", ".gif"]}
-        maxFileSize={5242880}
+        maxFileSize={5242880 * 2}
       />
       <>{loadingBar}</>
       <div className="button-OCR" onClick={handleImageOCR}>

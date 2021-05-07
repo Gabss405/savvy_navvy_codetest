@@ -35,6 +35,12 @@ h1 {
   color: white;
   cursor: pointer;
 }
+.button-OCR:active {
+  background: #3f4254;
+  opacity: 0.5;
+  color: white;
+  cursor: pointer;
+}
 
 .deleteImage {
   background: #3f4254 !important;
