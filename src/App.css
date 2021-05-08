@@ -52,7 +52,7 @@ h1 {
 
 .results-container {
   display: flex;
-
+  flex-direction: column;
   justify-content: space-between;
 }
 
@@ -60,9 +60,45 @@ h1 {
 .partial-matches {
   padding: 10px;
   margin: 10px;
-  border: 2px solid red;
+  border-radius: 20px;
 }
 
 .coordinate-list-element {
   list-style: none;
+}
+
+.results-table {
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+}
+
+thead {
+  display: flex;
+  justify-content: space-around;
+  font-size: 13px;
+  margin: 1px;
+}
+.results-header td {
+  padding: 2px;
+}
+
+td {
+  width: 50px;
+  /* border: 2px solid red; */
+}
+
+textarea {
+  width: 46px;
+  height: 13px;
+}
+
+tr {
+}
+
+.table-row-full {
+  background-color: rgb(180, 255, 180);
+}
+.table-row-partial {
+  background-color: rgb(253, 155, 180);
 }

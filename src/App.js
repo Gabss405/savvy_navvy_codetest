@@ -15,20 +15,17 @@ const App = () => {
     setUploadedImgs(pictureURL);
   };
 
-  const sanitize = (text) => {
-    console.log(text);
-    let sanitizedText =
-      text.substr(0, 2) +
-      "°" +
-      text.substr(3, 2) +
-      '"' +
-      "." +
-      text.substr(7, 3) +
-      text.substr(10, 3) +
-      "°" +
-      text.substr(14, 3) +
-      "." +
-      text.substr(18, 3);
+  const sanitise = (text) => {
+    let sanitizedText = {
+      dd1: text.substr(0, 2),
+      mm1: text.substr(3, 2),
+      ss1: text.substr(7, 2),
+      cd1: text[9],
+      dd2: text.substr(10, 3),
+      mm2: text.substr(14, 2),
+      ss2: text.substr(18, 2),
+      cd2: text[20],
+    };
     return sanitizedText;
   };
 
@@ -46,11 +43,19 @@ const App = () => {
       })
         .then(({ data: { text } }) => {
           console.log(text);
+          let tempFullMatches = text.match(fullMatchRegex);
           let fullMatches = [];
-          let partialMatches = text.match(partialMatchRegex);
+          let partialMatches = [];
 
-          text.match(fullMatchRegex).forEach((el) => {
-            fullMatches.push(sanitize(el));
+          tempFullMatches.forEach((el) => {
+            fullMatches.push(sanitise(el));
+          });
+
+          let textNoFullMatches = text.replace(fullMatchRegex, "");
+
+          console.log(textNoFullMatches);
+          textNoFullMatches.match(partialMatchRegex).forEach((el) => {
+            partialMatches.push(sanitise(el));
           });
 
           return { fullMatches, partialMatches };
@@ -98,33 +103,103 @@ const App = () => {
       <div className="button-OCR" onClick={handleImageOCR}>
         Run OCR
       </div>
-      {(coordinates?.partialMatches.length > 0 ||
-        coordinates?.fullMatches.length > 0) && (
+      {(coordinates.partialMatches?.length > 0 ||
+        coordinates.fullMatches?.length > 0) && (
         <div className="results-container">
-          <ul className="full-matches">
-            <strong>{coordinates.fullMatches.length + " full matches"}</strong>
+          <table className="results-table">
+            <thead className="results-header">
+              <th></th>
+              <th>DD</th>
+              <th>MM</th>
+              <th>SS</th>
+              <th>CD</th>
+              <th>DD</th>
+              <th>MM</th>
+              <th>SS</th>
+              <th>CD</th>
+              <th>Link</th>
+            </thead>
             {coordinates.fullMatches.map((match) => (
-              <li
-                className="coordinate-list-element"
+              <tr
+                className="table-row-full"
                 key={coordinates.fullMatches.indexOf(match)}
               >
-                <p>{match}</p>
-              </li>
+                <td>Full match {coordinates.fullMatches.indexOf(match)}</td>
+                <td>
+                  <textarea>{match.dd1}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.mm1}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.ss1}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.cd1}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.dd2}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.mm2}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.ss2}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.cd2}</textarea>
+                </td>
+                <td>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.open(
+                        `https://www.google.com/maps/place/56%C2%B003'22.0%22N+3%C2%B014'21.0%22W`,
+                        "_blank"
+                      );
+                    }}
+                  >
+                    {" "}
+                    Open
+                  </button>
+                </td>
+              </tr>
             ))}
-          </ul>
-          <ul className="partial-matches">
-            <strong>
-              {coordinates.partialMatches.length + " partial matches"}
-            </strong>{" "}
             {coordinates.partialMatches.map((match) => (
-              <li
-                className="coordinate-list-element"
+              <tr
+                className="table-row-partial"
                 key={coordinates.partialMatches.indexOf(match)}
               >
-                <p>{match}</p>
-              </li>
+                <td>
+                  Partial match {coordinates.partialMatches.indexOf(match)}
+                </td>
+                <td>
+                  <textarea>{match.dd1}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.mm1}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.ss1}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.cd1}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.dd2}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.mm2}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.ss2}</textarea>
+                </td>
+                <td>
+                  <textarea>{match.cd2}</textarea>
+                </td>
+              </tr>
             ))}
-          </ul>
+          </table>
         </div>
       )}
     </div>
@@ -132,3 +207,30 @@ const App = () => {
 };
 
 export default App;
+
+{
+  /* <ul className="full-matches">
+<strong>{coordinates.fullMatches.length + " full matches"}</strong>
+{coordinates.fullMatches.map((match) => (
+  <li
+    className="coordinate-list-element"
+    key={coordinates.fullMatches.indexOf(match)}
+  >
+    <p>{match}</p>
+  </li>
+))}
+</ul>
+<ul className="partial-matches">
+<strong>
+  {"+" + coordinates.partialMatches.length + " partial matches"}
+</strong>{" "}
+{coordinates.partialMatches.map((match) => (
+  <li
+    className="coordinate-list-element"
+    key={coordinates.partialMatches.indexOf(match)}
+  >
+    <p>{match}</p>
+  </li>
+))}
+</ul> */
+}
