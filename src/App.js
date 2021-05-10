@@ -1,5 +1,5 @@
 import "./App.css";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { createWorker } from "tesseract.js";
 import ImageUploader from "react-images-upload";
 
