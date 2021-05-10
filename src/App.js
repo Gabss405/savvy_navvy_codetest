@@ -1,7 +1,10 @@
 import "./App.css";
 import { useEffect, useState } from "react";
-import Tesseract from "tesseract.js";
+import { createWorker } from "tesseract.js";
 import ImageUploader from "react-images-upload";
+// import { nanoid } from "nanoid";
+
+import LoadingBar from "./components/LoadingBar";
 
 const App = () => {
   const [uploadedImgs, setUploadedImgs] = useState([]);
@@ -10,22 +13,26 @@ const App = () => {
     fullMatches: [],
     partialMatches: [],
   });
+  const [results, setResults] = [];
 
   const onDrop = (_, pictureURL) => {
+    console.log(pictureURL);
     setUploadedImgs(pictureURL);
   };
 
   const sanitise = (text) => {
     let sanitizedText = {
+      // id: nanoid(),
       dd1: text.substr(0, 2),
       mm1: text.substr(3, 2),
       ss1: text.substr(7, 2),
-      cd1: text[9],
+      cd1: text[9] ? text[9].toUpperCase() : "",
       dd2: text.substr(10, 3),
       mm2: text.substr(14, 2),
       ss2: text.substr(18, 2),
-      cd2: text[20],
+      cd2: text[20] ? text[20].toUpperCase() : "",
     };
+    // console.log(sanitizedText.id);
     return sanitizedText;
   };
 
@@ -33,60 +40,71 @@ const App = () => {
 
   const partialMatchRegex = /([0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[NS]\s[0-9]{2}.[0-9]{2})/gi;
 
-  const handleImageOCR = () => {
-    uploadedImgs.forEach((picture) => {
-      Tesseract.recognize(picture, "eng", {
-        logger: (worker) => {
-          if (worker.progress * 100 > progress)
-            setProgress(worker.progress * 100);
-        },
-      })
-        .then(({ data: { text } }) => {
-          console.log(text);
-          let tempFullMatches = text.match(fullMatchRegex);
-          let fullMatches = [];
-          let partialMatches = [];
+  const worker = createWorker({
+    logger: (worker) => {
+      if (worker.progress * 100 > progress) setProgress(worker.progress * 100);
+    },
+  });
 
-          tempFullMatches.forEach((el) => {
-            fullMatches.push(sanitise(el));
-          });
+  const handleImageOCR = async () => {
+    uploadedImgs.forEach(async (img) => {
+      await worker.load();
+      await worker.loadLanguage("eng");
+      await worker.initialize("eng");
 
-          let textNoFullMatches = text.replace(fullMatchRegex, "");
+      const {
+        data: { text },
+      } = await worker.recognize(img);
 
-          console.log(textNoFullMatches);
-          textNoFullMatches.match(partialMatchRegex).forEach((el) => {
-            partialMatches.push(sanitise(el));
-          });
+      let fullMatches = [];
+      let partialMatches = [];
 
-          return { fullMatches, partialMatches };
-        })
-        .then(({ fullMatches, partialMatches }) => {
-          setCoordinates({
-            fullMatches,
-            partialMatches,
-          });
-        });
+      let tempFullMatches = text.match(fullMatchRegex);
+
+      tempFullMatches.forEach((el) => {
+        fullMatches.push(sanitise(el));
+      });
+
+      let textNoFullMatches = text.replace(fullMatchRegex, "");
+
+      textNoFullMatches.match(partialMatchRegex).forEach((el) => {
+        console.log(el);
+        partialMatches.push(sanitise(el));
+      });
+
+      setCoordinates({
+        fullMatches,
+        partialMatches,
+      });
+      console.log(text);
+      await worker.terminate();
     });
   };
 
-  const loadingBar =
-    progress > 1 && progress < 100 && progress !== 50 ? (
-      <div className="loading-bar-container">
-        <div
-          style={{
-            width: `${progress}%`,
-            height: "10px",
-            backgroundColor: "#3f4257",
-            alignSelf: "flex-start",
-            border: "1px solid black",
-            borderRadius: "30px",
-          }}
-        ></div>
-        <div className="process-label">{Math.floor(progress)}% Processed</div>
-      </div>
-    ) : (
-      <div className="process-label"> 0% Processed</div>
-    );
+  const handleChange = (e) => {
+    e.preventDefault();
+    const { name, value, id, className } = e.target;
+    if (className.includes("td-fullm")) {
+      setCoordinates(({ fullMatches, partialMatches }) => {
+        let tempArray = [...fullMatches];
+        let tempObjs = { ...tempArray[+id] };
+        tempObjs[name] = value;
+        tempArray[+id] = tempObjs;
+        return { fullMatches: tempArray, partialMatches };
+      });
+    }
+    if (className.includes("td-partialm")) {
+      setCoordinates(({ fullMatches, partialMatches }) => {
+        let tempArray = [...partialMatches];
+        let tempObjs = { ...tempArray[+id] };
+        tempObjs[name] = value;
+        tempArray[+id] = tempObjs;
+        return { fullMatches, partialMatches: tempArray };
+      });
+    }
+  };
+
+  console.log(coordinates);
 
   return (
     <div className="main-container">
@@ -99,7 +117,7 @@ const App = () => {
         imgExtension={[".jpg", ".gif", ".png", ".gif"]}
         maxFileSize={5242880 * 2}
       />
-      <>{loadingBar}</>
+      <LoadingBar progress={progress} />
       <div className="button-OCR" onClick={handleImageOCR}>
         Run OCR
       </div>
@@ -108,97 +126,222 @@ const App = () => {
         <div className="results-container">
           <table className="results-table">
             <thead className="results-header">
-              <th></th>
-              <th>DD</th>
-              <th>MM</th>
-              <th>SS</th>
-              <th>CD</th>
-              <th>DD</th>
-              <th>MM</th>
-              <th>SS</th>
-              <th>CD</th>
-              <th>Link</th>
+              <tr>
+                <th></th>
+                <th>DD</th>
+                <th>MM</th>
+                <th>SS</th>
+                <th>CD</th>
+                <th>DD</th>
+                <th>MM</th>
+                <th>SS</th>
+                <th>CD</th>
+                <th>Link</th>
+              </tr>
             </thead>
-            {coordinates.fullMatches.map((match) => (
-              <tr
-                className="table-row-full"
-                key={coordinates.fullMatches.indexOf(match)}
-              >
-                <td>Full match {coordinates.fullMatches.indexOf(match)}</td>
-                <td>
-                  <textarea>{match.dd1}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.mm1}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.ss1}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.cd1}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.dd2}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.mm2}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.ss2}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.cd2}</textarea>
-                </td>
-                <td>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      window.open(
-                        `https://www.google.com/maps/place/56%C2%B003'22.0%22N+3%C2%B014'21.0%22W`,
-                        "_blank"
-                      );
-                    }}
-                  >
-                    {" "}
-                    Open
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {coordinates.partialMatches.map((match) => (
-              <tr
-                className="table-row-partial"
-                key={coordinates.partialMatches.indexOf(match)}
-              >
-                <td>
-                  Partial match {coordinates.partialMatches.indexOf(match)}
-                </td>
-                <td>
-                  <textarea>{match.dd1}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.mm1}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.ss1}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.cd1}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.dd2}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.mm2}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.ss2}</textarea>
-                </td>
-                <td>
-                  <textarea>{match.cd2}</textarea>
-                </td>
-              </tr>
-            ))}
+            <tbody>
+              {coordinates.fullMatches?.map((match, idx) => (
+                <tr className="full-matches" key={idx}>
+                  <td className="match-label">Full match {idx + 1 + "."}</td>
+                  <td>
+                    <textarea
+                      name="dd1"
+                      id={idx}
+                      className="td-fullm"
+                      onChange={handleChange}
+                      defaultValue={match.dd1}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="mm1"
+                      id={idx}
+                      className="td-fullm"
+                      onChange={handleChange}
+                      defaultValue={match.mm1}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="ss1"
+                      id={idx}
+                      className="td-fullm"
+                      onChange={handleChange}
+                      defaultValue={match.ss1}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="cd1"
+                      id={idx}
+                      className="td-fullm"
+                      onChange={handleChange}
+                      defaultValue={match.cd1}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="dd2"
+                      id={idx}
+                      className="td-fullm"
+                      onChange={handleChange}
+                      defaultValue={match.dd2}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="mm2"
+                      id={idx}
+                      className="td-fullm"
+                      onChange={handleChange}
+                      defaultValue={match.mm2}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="ss2"
+                      id={idx}
+                      className="td-fullm"
+                      onChange={handleChange}
+                      defaultValue={match.ss2}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="cd2"
+                      id={idx}
+                      className="td-fullm"
+                      onChange={handleChange}
+                      defaultValue={match.cd2}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.open(
+                          `https://www.google.com/maps/place/${match.dd1}%C2%B0${match.mm1}'${match.ss1}.0%22${match.cd1}+${match.dd2}%C2%B0${match.mm2}'${match.ss2}.0%22${match.cd2}`,
+                          "_blank"
+                        );
+                      }}
+                    >
+                      Open
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `${match.dd1}° ${match.mm1}" ${match.ss1}' ${match.cd1} ${match.dd2}° ${match.mm2}" ${match.ss2}' ${match.cd2}`
+                        );
+                      }}
+                    >
+                      Copy to Clipboard
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {coordinates.partialMatches?.map((match, idx) => (
+                <tr className="table-row-partial" key={idx}>
+                  <td className="match-label">
+                    Partial match
+                    {idx + 1 + "."}
+                  </td>
+                  <td>
+                    <textarea
+                      name="dd1"
+                      id={idx}
+                      className="td-partialm"
+                      onChange={handleChange}
+                      defaultValue={match.dd1}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="mm1"
+                      id={idx}
+                      className="td-partialm"
+                      onChange={handleChange}
+                      defaultValue={match.mm1}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="ss1"
+                      id={idx}
+                      className="td-partialm"
+                      onChange={handleChange}
+                      defaultValue={match.ss1}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="cd1"
+                      id={idx}
+                      className="td-partialm"
+                      onChange={handleChange}
+                      defaultValue={match.cd1}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="dd2"
+                      id={idx}
+                      className="td-partialm"
+                      onChange={handleChange}
+                      defaultValue={match.dd2}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="mm2"
+                      id={idx}
+                      className="td-partialm"
+                      onChange={handleChange}
+                      defaultValue={match.mm2}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="ss2"
+                      id={idx}
+                      className="td-partialm"
+                      onChange={handleChange}
+                      defaultValue={match.ss2}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <textarea
+                      name="cd2"
+                      id={idx}
+                      className="td-partialm"
+                      onChange={handleChange}
+                      defaultValue={match.cd2}
+                    ></textarea>
+                  </td>
+                  <td>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.open(
+                          `https://www.google.com/maps/place/${match.dd1}%C2%B0${match.mm1}'0.${match.ss1}%22${match.cd1}+${match.dd2}%C2%B0${match.mm2}'0.${match.ss2}%22${match.cd2}`,
+                          "_blank"
+                        );
+                      }}
+                    >
+                      Open
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `${match.dd1}° ${match.mm1}" ${match.ss1}' ${match.cd1} ${match.dd2}° ${match.mm2}" ${match.ss2}' ${match.cd2}`
+                        );
+                      }}
+                    >
+                      Copy to Clipboard
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
           </table>
         </div>
       )}
@@ -207,30 +350,3 @@ const App = () => {
 };
 
 export default App;
-
-{
-  /* <ul className="full-matches">
-<strong>{coordinates.fullMatches.length + " full matches"}</strong>
-{coordinates.fullMatches.map((match) => (
-  <li
-    className="coordinate-list-element"
-    key={coordinates.fullMatches.indexOf(match)}
-  >
-    <p>{match}</p>
-  </li>
-))}
-</ul>
-<ul className="partial-matches">
-<strong>
-  {"+" + coordinates.partialMatches.length + " partial matches"}
-</strong>{" "}
-{coordinates.partialMatches.map((match) => (
-  <li
-    className="coordinate-list-element"
-    key={coordinates.partialMatches.indexOf(match)}
-  >
-    <p>{match}</p>
-  </li>
-))}
-</ul> */
-}

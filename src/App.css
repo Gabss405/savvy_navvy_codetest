@@ -56,13 +56,6 @@ h1 {
   justify-content: space-between;
 }
 
-.full-matches,
-.partial-matches {
-  padding: 10px;
-  margin: 10px;
-  border-radius: 20px;
-}
-
 .coordinate-list-element {
   list-style: none;
 }
@@ -77,9 +70,13 @@ thead {
   display: flex;
   justify-content: space-around;
   font-size: 13px;
-  margin: 1px;
+  /* margin: 2px; */
 }
-.results-header td {
+
+th {
+  width: 48px;
+  height: 13px;
+  border: 1px solid black;
   padding: 2px;
 }
 
@@ -89,16 +86,31 @@ td {
 }
 
 textarea {
-  width: 46px;
-  height: 13px;
 }
 
-tr {
+.match-label {
+  width: 60px;
+  font-size: 14px;
 }
-
-.table-row-full {
+.full-matches,
+.partial-matches {
+  padding: 10px;
+  margin: 10px;
+  border-radius: 20px;
+}
+.td-fullm {
   background-color: rgb(180, 255, 180);
 }
-.table-row-partial {
+.td-partialm {
   background-color: rgb(253, 155, 180);
+}
+
+textarea {
+  width: 46px;
+  height: 17px;
+  outline: none;
+  resize: none;
+  border: none;
+  border-radius: 20px;
+  text-align: center;
 }

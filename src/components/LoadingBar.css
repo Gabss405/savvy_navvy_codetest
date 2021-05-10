@@ -1,0 +1,10 @@
+.loading-bar-container {
+  width: 25vw;
+  display: flex;
+  flex-direction: column;
+}
+
+.process-label {
+  justify-self: center;
+  text-align: center;
+}
