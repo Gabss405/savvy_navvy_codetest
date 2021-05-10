@@ -2,7 +2,6 @@ import "./App.css";
 import { useEffect, useState } from "react";
 import { createWorker } from "tesseract.js";
 import ImageUploader from "react-images-upload";
-// import { nanoid } from "nanoid";
 
 import LoadingBar from "./components/LoadingBar";
 
@@ -13,16 +12,15 @@ const App = () => {
     fullMatches: [],
     partialMatches: [],
   });
-  const [results, setResults] = [];
 
+  // function for uploading/formatting pictures
   const onDrop = (_, pictureURL) => {
-    console.log(pictureURL);
     setUploadedImgs(pictureURL);
   };
 
+  //
   const sanitise = (text) => {
-    let sanitizedText = {
-      // id: nanoid(),
+    let sanitisedText = {
       dd1: text.substr(0, 2),
       mm1: text.substr(3, 2),
       ss1: text.substr(7, 2),
@@ -32,8 +30,7 @@ const App = () => {
       ss2: text.substr(18, 2),
       cd2: text[20] ? text[20].toUpperCase() : "",
     };
-    // console.log(sanitizedText.id);
-    return sanitizedText;
+    return sanitisedText;
   };
 
   const fullMatchRegex = /[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[NS]\s[0-9]{2}.[0-9]{2}.{1,2}[0-9]{2}[WE]/gi;
@@ -61,13 +58,13 @@ const App = () => {
 
       let tempFullMatches = text.match(fullMatchRegex);
 
-      tempFullMatches.forEach((el) => {
+      tempFullMatches?.forEach((el) => {
         fullMatches.push(sanitise(el));
       });
 
       let textNoFullMatches = text.replace(fullMatchRegex, "");
 
-      textNoFullMatches.match(partialMatchRegex).forEach((el) => {
+      textNoFullMatches.match(partialMatchRegex)?.forEach((el) => {
         console.log(el);
         partialMatches.push(sanitise(el));
       });
@@ -127,14 +124,14 @@ const App = () => {
           <table className="results-table">
             <thead className="results-header">
               <tr>
-                <th></th>
-                <th>DD</th>
-                <th>MM</th>
-                <th>SS</th>
+                <th className="match-label"></th>
+                <th>DD°</th>
+                <th>MM"</th>
+                <th>SS'</th>
                 <th>CD</th>
-                <th>DD</th>
-                <th>MM</th>
-                <th>SS</th>
+                <th>DD°</th>
+                <th>MM"</th>
+                <th>SS'</th>
                 <th>CD</th>
                 <th>Link</th>
               </tr>
@@ -142,7 +139,7 @@ const App = () => {
             <tbody>
               {coordinates.fullMatches?.map((match, idx) => (
                 <tr className="full-matches" key={idx}>
-                  <td className="match-label">Full match {idx + 1 + "."}</td>
+                  <td className="match-label">Full match {idx + 1 + ":"}</td>
                   <td>
                     <textarea
                       name="dd1"
@@ -215,7 +212,7 @@ const App = () => {
                       defaultValue={match.cd2}
                     ></textarea>
                   </td>
-                  <td>
+                  <td className="buttons-container">
                     <button
                       onClick={(e) => {
                         e.preventDefault();
@@ -234,16 +231,15 @@ const App = () => {
                         );
                       }}
                     >
-                      Copy to Clipboard
+                      Copy
                     </button>
                   </td>
                 </tr>
               ))}
               {coordinates.partialMatches?.map((match, idx) => (
-                <tr className="table-row-partial" key={idx}>
+                <tr className="partial-matches" key={idx}>
                   <td className="match-label">
-                    Partial match
-                    {idx + 1 + "."}
+                    Partial match{" " + (idx + 1) + ":"}
                   </td>
                   <td>
                     <textarea
@@ -317,7 +313,7 @@ const App = () => {
                       defaultValue={match.cd2}
                     ></textarea>
                   </td>
-                  <td>
+                  <td className="buttons-container">
                     <button
                       onClick={(e) => {
                         e.preventDefault();
@@ -336,7 +332,7 @@ const App = () => {
                         );
                       }}
                     >
-                      Copy to Clipboard
+                      Copy
                     </button>
                   </td>
                 </tr>
