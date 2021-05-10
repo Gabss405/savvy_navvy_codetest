@@ -5,7 +5,7 @@ const MatchesList = ({ match, idx, handleChange, fullMatch }) => {
     <tr className="full-matches" key={idx}>
       <td className="match-label">
         {" "}
-        {fullMatch ? "Full match" : "Partial Match"} {idx + 1 + ":"}
+        {fullMatch ? "Full Match" : "Partial Match"} {idx + 1 + ":"}
       </td>
       <td>
         <textarea
